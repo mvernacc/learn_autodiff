@@ -1,5 +1,5 @@
-import numpy as np
-import jax.numpy as jnp
+import numpy as np_orig
+import jax.numpy as np
 from jax import grad, jit, vmap, jacfwd, jacrev
 import matplotlib.pyplot as plt
 
@@ -10,7 +10,7 @@ def hessian(fun):
 
 def bumpy_paraboloid(x):
     """An example function to minimize."""
-    y = x[0]**2 + jnp.abs(x[0]) * jnp.cos(x[0])
+    y = x[0] ** 2 + np.abs(x[0]) * np.cos(x[0])
     y += x[1]**2
     return y
 
@@ -24,7 +24,7 @@ def newton_min(f, x0, max_n_steps=20, gamma=1., tol=1e-6):
         grad_f_x = grad_f(x_history[k])
         if grad_f_x @ grad_f_x < tol:
             break
-        step = gamma * np.linalg.pinv(grad2_f(x_history[k])) @ grad_f_x
+        step = gamma * np_orig.linalg.pinv(grad2_f(x_history[k])) @ grad_f_x
         x_history.append(
             x_history[k] - step)
     return x_history
@@ -32,12 +32,9 @@ def newton_min(f, x0, max_n_steps=20, gamma=1., tol=1e-6):
 
 def main():
     ### Make a contour plot of the function that we're minimizing ###
-    x1 = np.linspace(-5, 5)
-    x2 = np.linspace(-5, 5)
-    Y = np.zeros((len(x1), len(x2)))
-    for i1 in range(len(x1)):
-        for i2 in range(len(x2)):
-            Y[i1, i2] = bumpy_paraboloid([x1[i1], x2[i2]])
+    x1 = np_orig.linspace(-5, 5)
+    x2 = np_orig.linspace(-5, 5)
+    Y = bumpy_paraboloid(np_orig.meshgrid(x1, x2))
 
     fig, ax = plt.subplots()
     contourset = ax.contour(
@@ -49,10 +46,10 @@ def main():
 
     ### Do the minimization ###
     x_history = newton_min(
-        bumpy_paraboloid, x0=jnp.array([4., 4.]), gamma=0.5)
+        bumpy_paraboloid, x0=np.array([4., 4.]), gamma=0.5)
 
     ### Plot the history of x's the minimizer steped thru ###
-    x_history = np.array(x_history)
+    x_history = np_orig.array(x_history)
     print(x_history)
     ax.plot(
         x_history[:, 0], x_history[:, 1],
