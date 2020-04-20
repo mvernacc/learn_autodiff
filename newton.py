@@ -31,6 +31,7 @@ def newton_min(f, x0, max_n_steps=20, gamma=1., tol=1e-6):
 
 
 def main():
+    ### Make a contour plot of the function that we're minimizing ###
     x1 = np.linspace(-5, 5)
     x2 = np.linspace(-5, 5)
     Y = np.zeros((len(x1), len(x2)))
@@ -46,9 +47,11 @@ def main():
     ax.set_xlabel('$x1$')
     ax.set_ylabel('$x2$')
 
+    ### Do the minimization ###
     x_history = newton_min(
         bumpy_paraboloid, x0=jnp.array([4., 4.]), gamma=0.5)
 
+    ### Plot the history of x's the minimizer steped thru ###
     x_history = np.array(x_history)
     print(x_history)
     ax.plot(
