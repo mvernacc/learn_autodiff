@@ -10,12 +10,12 @@ def hessian(fun):
 
 def bumpy_paraboloid(x):
     """An example function to minimize."""
-    y = x[0] ** 2 + np.abs(x[0]) * np.cos(x[0])
+    y = x[0]**2 + 0.125 * np.cos(4 * x[0])
     y += x[1]**2
     return y
 
 
-def newton_min(f, x0, max_n_steps=20, gamma=1., tol=1e-6):
+def newton_min(f, x0, max_n_steps=20, gamma=1., lamb=0.1, tol=1e-6):
     """Do minimization using Newton's method."""
     x_history = [x0]
     grad_f = grad(f)
@@ -24,7 +24,8 @@ def newton_min(f, x0, max_n_steps=20, gamma=1., tol=1e-6):
         grad_f_x = grad_f(x_history[k])
         if grad_f_x @ grad_f_x < tol:
             break
-        step = gamma * np_orig.linalg.pinv(grad2_f(x_history[k])) @ grad_f_x
+        B = np_orig.linalg.pinv(grad2_f(x_history[k])) + lamb * np.eye(len(x0))
+        step = gamma * B @ grad_f_x
         x_history.append(
             x_history[k] - step)
     return x_history
@@ -46,7 +47,7 @@ def main():
 
     ### Do the minimization ###
     x_history = newton_min(
-        bumpy_paraboloid, x0=np.array([4., 4.]), gamma=0.5)
+        bumpy_paraboloid, x0=np.array([4., 4.]), gamma=0.05)
 
     ### Plot the history of x's the minimizer steped thru ###
     x_history = np_orig.array(x_history)
