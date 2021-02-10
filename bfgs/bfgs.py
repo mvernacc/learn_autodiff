@@ -1,5 +1,6 @@
+from typing import Callable, Union, Tuple
 import jax
-import jax.numpy as jnp
+import jax.interpreters.xla._DeviceArray as JaxArray
 import numpy as np
 from scipy.optimize import line_search
 import matplotlib.pyplot as plt
@@ -18,10 +19,6 @@ def rosen(x, a=1, b=5):
     return (a - x[0])**2 + b * (x[1] - x[0]**2)**2
 
 
-def hessian(fun):
-    return jax.jit(jax.jacfwd(jax.jacrev(fun)))
-
-
 def draw_contours(ax, f, color='black'):
     contour_z = np.zeros((len(CONTOUR_X), len(CONTOUR_Y)))
     for ix, x in enumerate(CONTOUR_X):
@@ -33,7 +30,24 @@ def draw_contours(ax, f, color='black'):
         levels=np.logspace(-1, 3, 8), colors=color)
 
 
-def do_bfgs_step(f, f_grad, x_k, H_k):
+def do_bfgs_step(f: Callable, f_grad: Callable,
+                 x_k: Union[np.ndarray, JaxArray], H_k: Union[np.ndarray, JaxArray]
+                 ) -> Tuple[Union[np.ndarray, JaxArray], Union[np.ndarray, JaxArray]]:
+    """Do one update step of the BFGS quasi-Newton optimization algorithm.
+
+    See Noedcal and Wright 2006, Chapter 6.1
+
+    Args:
+        f (Callable): Objective function.
+        f_grad (Callable): Function giving the gradient of the objective.
+        x_k (Union[np.ndarray, JaxArray]): Starting point for this step.
+        H_k (Union[np.ndarray, JaxArray]): Inverse hessian estimate at start of this step.
+
+    Returns:
+        Tuple[Union[np.ndarray, JaxArray], Union[np.ndarray, JaxArray]]:
+            x_k_plus_1: Next point.
+            H_k_plus_1: Next inverse hessian estimate.
+    """
     grad_f_k = f_grad(x_k)
 
     # Compute search direction
