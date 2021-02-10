@@ -57,52 +57,55 @@ def do_bfgs_step(f, f_grad, x_k, H_k):
     return x_k_plus_1, H_k_plus_1
 
 
-def draw_bfgs_step(ax, f, f_grad, f_hessian, x_k, B_k):
+def draw_bfgs_step(ax, f, f_grad, x_k, x_k_plus_1, B_k):
+    # Draw contours of the true function.
     draw_contours(ax, f, color='black')
+
+    # Draw contours of the BFGS quadratic approximation.
     f_k = f(x_k)
     grad_f_k = f_grad(x_k)
-    hess_true = f_hessian(x_k)
 
     def bfgs_quad_approx(x):
         p = x - x_k
         return f_k + grad_f_k @ p + 0.5 * p.transpose() @ B_k @ p
 
-    # def true_quad_approx(x):
-    #     p = x - x_k
-    #     return f_k + grad_f_k @ p + 0.5 * p.transpose() @ hess_true @ p
-
     draw_contours(ax, bfgs_quad_approx, color='tab:blue')
-    # draw_contours(ax, true_quad_approx, color='tab:orange')
+
+    # Draw the step to the next x point.
+    step = x_k_plus_1 - x_k
+    ax.arrow(
+        x_k[0], x_k[1], step[0], step[1],
+        fc='tab:red', ec='tab:red',
+        head_width=0.05, head_length=0.1)
 
 
 def main():
     n_steps = 5
-    fig, axes = plt.subplots(ncols=n_steps, figsize=(15, 4))
-    rosen_grad = jax.grad(rosen)
-    rosen_hessian = hessian(rosen)
+    fig, axes = plt.subplots(ncols=n_steps, figsize=(20, 6))
+    f = rosen
+    f_grad = jax.grad(f)
+    f_hessian = hessian(f)
 
-    x_k = np.array([-1., 2.])
-    H_k = (0.1 / np.linalg.norm(rosen_grad(x_k))) * np.eye(2)
+    x_k = np.array([0., 2.])
+    H_k = (1. / np.linalg.norm(f_grad(x_k))) * np.eye(2)
 
     for k in range(n_steps):
         print(f'\nStep k={k:d}')
         print('x_k = ' + str(x_k))
         print('H_k = ' + str(H_k))
-        x_k_plus_1, H_k_plus_1 = do_bfgs_step(rosen, rosen_grad, x_k, H_k)
 
+        x_k_plus_1, H_k_plus_1 = do_bfgs_step(f, f_grad, x_k, H_k)
+
+        # Plotting
         ax = axes[k]
-        step = x_k_plus_1 - x_k
-        ax.arrow(
-            x_k[0], x_k[1], step[0], step[1],
-            fc='tab:red', ec='tab:red',
-            head_width=0.05, head_length=0.1)
         B_k = np.linalg.inv(H_k)
-        draw_bfgs_step(ax, rosen, rosen_grad, rosen_hessian, x_k, B_k)
+        draw_bfgs_step(ax, f, f_grad, x_k, x_k_plus_1, B_k)
         ax.set_title(f'$k = {k:d}$')
 
         x_k = x_k_plus_1
         H_k = H_k_plus_1
 
+    plt.tight_layout()
     plt.show()
 
 
