@@ -84,7 +84,6 @@ def main():
     fig, axes = plt.subplots(ncols=n_steps, figsize=(20, 6))
     f = rosen
     f_grad = jax.grad(f)
-    f_hessian = hessian(f)
 
     x_k = np.array([0., 2.])
     H_k = (1. / np.linalg.norm(f_grad(x_k))) * np.eye(2)
